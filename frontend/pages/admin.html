@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin – Smart Canteen</title>
+<link rel="stylesheet" href="../css/style.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-mark">
+        <div class="logo-icon">🍽️</div>
+        <div class="logo-text">Smart<span>Canteen</span></div>
+      </div>
+    </div>
+
+    <span class="nav-label">Admin Panel</span>
+    <a class="nav-item active" onclick="showPage('overview')"><span class="icon">📊</span> Overview</a>
+    <a class="nav-item" onclick="showPage('students')"><span class="icon">👥</span> Students</a>
+    <a class="nav-item" onclick="showPage('payments')"><span class="icon">💳</span> Payments</a>
+    <a class="nav-item" onclick="showPage('attendance')"><span class="icon">📅</span> Attendance</a>
+    <a class="nav-item" onclick="showPage('qr')"><span class="icon">📷</span> QR Generator</a>
+    <a class="nav-item" onclick="showPage('menu')"><span class="icon">📋</span> Manage Menu</a>
+
+    <div class="sidebar-footer">
+      <div class="user-pill">
+        <div class="avatar" style="background:linear-gradient(135deg,#ff6b6b,#ee5a24);">A</div>
+        <div class="user-info">
+          <div class="user-name">Admin</div>
+          <div class="user-role">Administrator</div>
+        </div>
+      </div>
+      <button class="btn btn-ghost btn-sm btn-full" style="margin-top:12px;" onclick="logout()">🚪 Sign Out</button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <button class="btn btn-ghost btn-sm hamburger" onclick="toggleSidebar()">☰</button>
+        <div>
+          <div class="page-title" id="topbarTitle">Admin Overview</div>
+          <div style="font-size:12px;color:var(--text3);" id="topbarDate"></div>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <span id="pendingBadge" class="chip" style="display:none;background:rgba(249,202,36,0.1);border-color:rgba(249,202,36,0.3);color:var(--accent4);"></span>
+        <button class="btn btn-primary btn-sm" onclick="loadStats()">🔄 Refresh</button>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- ── OVERVIEW PAGE ── -->
+      <div class="page active" id="page-overview">
+        <div style="margin-bottom:28px;">
+          <h2 style="font-size:24px;font-weight:800;">Admin Overview</h2>
+          <p style="color:var(--text2);margin-top:4px;">Real-time canteen management dashboard</p>
+        </div>
+
+        <div class="grid-4" style="margin-bottom:24px;">
+          <div class="card stat-card">
+            <div class="stat-icon" style="background:rgba(108,99,255,0.15);">👥</div>
+            <div class="stat-value counter" id="totalStudents">0</div>
+            <div class="stat-label">Total Students</div>
+            <span class="stat-delta delta-up">↑ Growing</span>
+          </div>
+          <div class="card stat-card">
+            <div class="stat-icon" style="background:rgba(67,233,123,0.15);">✅</div>
+            <div class="stat-value counter" id="activeSubs">0</div>
+            <div class="stat-label">Active Subscriptions</div>
+            <span class="stat-delta delta-up">↑ Active</span>
+          </div>
+          <div class="card stat-card">
+            <div class="stat-icon" style="background:rgba(249,202,36,0.15);">⏳</div>
+            <div class="stat-value counter" id="pendingCount">0</div>
+            <div class="stat-label">Pending Payments</div>
+            <span class="stat-delta delta-neutral">⚠ Pending</span>
+          </div>
+          <div class="card stat-card">
+            <div class="stat-icon" style="background:rgba(255,107,107,0.15);">💰</div>
+            <div class="stat-value" id="totalRevenue">₹0</div>
+            <div class="stat-label">Total Revenue</div>
+            <span class="stat-delta delta-up">↑ Earned</span>
+          </div>
+        </div>
+
+        <div class="grid-2" style="margin-bottom:24px;">
+          <div class="card">
+            <div class="section-title" style="margin-bottom:16px;">📈 Last 7 Days Attendance</div>
+            <canvas id="attendanceChart" height="220"></canvas>
+          </div>
+          <div class="card">
+            <div class="section-title" style="margin-bottom:16px;">📊 Today's Stats</div>
+            <div style="display:flex;flex-direction:column;gap:12px;" id="todayStats">
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:14px;background:var(--surface2);border-radius:var(--radius-sm);">
+                <span style="font-size:14px;color:var(--text2);">🌅 Breakfast</span>
+                <span class="counter" id="todayBreakfast" style="font-weight:700;">0</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:14px;background:var(--surface2);border-radius:var(--radius-sm);">
+                <span style="font-size:14px;color:var(--text2);">☀️ Lunch</span>
+                <span class="counter" id="todayLunch" style="font-weight:700;">0</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:14px;background:var(--surface2);border-radius:var(--radius-sm);">
+                <span style="font-size:14px;color:var(--text2);">🍵 Snack</span>
+                <span class="counter" id="todaySnack" style="font-weight:700;">0</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:14px;background:var(--surface2);border-radius:var(--radius-sm);">
+                <span style="font-size:14px;color:var(--text2);">🌙 Dinner</span>
+                <span class="counter" id="todayDinner" style="font-weight:700;">0</span>
+              </div>
+            </div>
+            <div style="margin-top:12px;padding:14px;background:rgba(108,99,255,0.08);border:1px solid rgba(108,99,255,0.2);border-radius:var(--radius-sm);display:flex;justify-content:space-between;align-items:center;">
+              <span style="font-weight:600;">Total Today</span>
+              <span class="counter" id="totalToday" style="font-size:20px;font-weight:800;color:var(--accent);">0</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── STUDENTS PAGE ── -->
+      <div class="page" id="page-students">
+        <div class="section-header" style="margin-bottom:24px;">
+          <div>
+            <h2 style="font-size:22px;font-weight:800;">Students</h2>
+            <p style="color:var(--text2);margin-top:4px;">All registered students</p>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <input id="studentSearch" class="form-input" placeholder="🔍 Search student…" style="width:220px;" oninput="filterStudents(this.value)">
+          </div>
+        </div>
+        <div class="card">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>#</th><th>Student</th><th>ID</th><th>Email</th><th>Phone</th><th>Plan</th><th>Remaining</th><th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="studentsTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── PAYMENTS PAGE ── -->
+      <div class="page" id="page-payments">
+        <div style="margin-bottom:24px;">
+          <h2 style="font-size:22px;font-weight:800;">Payment Verification</h2>
+          <p style="color:var(--text2);margin-top:4px;">Review and approve student payments</p>
+        </div>
+        <div id="pendingPaymentsList"></div>
+      </div>
+
+      <!-- ── ATTENDANCE PAGE ── -->
+      <div class="page" id="page-attendance">
+        <div style="margin-bottom:24px;">
+          <h2 style="font-size:22px;font-weight:800;">Today's Attendance</h2>
+          <p style="color:var(--text2);margin-top:4px;" id="attendanceDate"></p>
+        </div>
+        <div class="card">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>#</th><th>Student</th><th>Student ID</th><th>Session</th><th>Time</th></tr>
+              </thead>
+              <tbody id="attendanceTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── QR PAGE ── -->
+      <div class="page" id="page-qr">
+        <div style="margin-bottom:24px;">
+          <h2 style="font-size:22px;font-weight:800;">QR Code Generator</h2>
+          <p style="color:var(--text2);margin-top:4px;">Generate session QR codes for attendance scanning</p>
+        </div>
+        <div class="grid-2">
+          <div class="card">
+            <div class="section-title" style="margin-bottom:20px;">Generate Session QR</div>
+            <div class="form-group">
+              <label class="form-label">Select Session</label>
+              <select id="qrSession" class="form-input">
+                <option value="breakfast">🌅 Morning Breakfast (7:30–9:00 AM)</option>
+                <option value="lunch">☀️ Afternoon Lunch (12:00–2:00 PM)</option>
+                <option value="snack">🍵 Evening Snack (3:00–5:00 PM)</option>
+                <option value="dinner">🌙 Night Dinner (7:30–9:15 PM)</option>
+              </select>
+            </div>
+            <button class="btn btn-primary btn-full" onclick="generateQR()">🔲 Generate QR Code</button>
+          </div>
+          <div class="card" id="qrDisplay" style="display:flex;align-items:center;justify-content:center;">
+            <div style="text-align:center;color:var(--text3);">
+              <div style="font-size:48px;margin-bottom:8px;">🔲</div>
+              <div>Select a session and generate QR</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── MENU PAGE ── -->
+      <div class="page" id="page-menu">
+        <div style="margin-bottom:24px;">
+          <h2 style="font-size:22px;font-weight:800;">Manage Menu</h2>
+          <p style="color:var(--text2);margin-top:4px;">Update today's menu for all sessions</p>
+        </div>
+        <div class="card">
+          <div class="form-group">
+            <label class="form-label">Date</label>
+            <input type="date" id="menuDate" class="form-input">
+          </div>
+          <div class="form-group">
+            <label class="form-label">🌅 Breakfast</label>
+            <input id="mBreakfast" class="form-input" placeholder="e.g. Idli, Sambar, Chutney" value="Idli, Vada, Sambar, Coconut Chutney">
+          </div>
+          <div class="form-group">
+            <label class="form-label">☀️ Lunch</label>
+            <input id="mLunch" class="form-input" placeholder="e.g. Rice, Dal, Sabzi, Roti" value="Rice, Dal Fry, Aloo Gobi, Roti, Salad, Papad">
+          </div>
+          <div class="form-group">
+            <label class="form-label">🍵 Snack</label>
+            <input id="mSnack" class="form-input" placeholder="e.g. Tea, Biscuits" value="Chai, Bread Butter, Banana">
+          </div>
+          <div class="form-group">
+            <label class="form-label">🌙 Dinner</label>
+            <input id="mDinner" class="form-input" placeholder="e.g. Roti, Paneer, Rice" value="Roti, Dal Makhani, Paneer Butter Masala, Rice, Gulab Jamun">
+          </div>
+          <button class="btn btn-primary" onclick="updateMenu()">💾 Save Menu</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="../js/app.js"></script>
+<script>
+const user = requireAuth('admin');
+if (!user) throw new Error('auth');
+
+let allStudents = [];
+let chartInstance = null;
+
+function init() {
+  document.getElementById('topbarDate').textContent = new Date().toLocaleDateString('en-IN', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+  document.getElementById('menuDate').value = new Date().toISOString().split('T')[0];
+  loadStats();
+}
+
+async function loadStats() {
+  try {
+    const stats = await apiFetch('/admin/stats');
+
+    animateCounter(document.getElementById('totalStudents'), stats.totalStudents);
+    animateCounter(document.getElementById('activeSubs'), stats.activeSubscriptions);
+    animateCounter(document.getElementById('pendingCount'), stats.pendingPayments);
+    document.getElementById('totalRevenue').textContent = formatCurrency(stats.revenue);
+    animateCounter(document.getElementById('totalToday'), stats.todayAttendance);
+
+    const pending = document.getElementById('pendingBadge');
+    if (stats.pendingPayments > 0) {
+      pending.style.display = 'flex';
+      pending.textContent = `⚠ ${stats.pendingPayments} pending`;
+    }
+
+    // Load today's attendance session breakdown
+    const todayRecs = await apiFetch('/admin/attendance-today').catch(() => []);
+    const sessions = { breakfast:0, lunch:0, snack:0, dinner:0 };
+    todayRecs.forEach(r => { if(sessions[r.sessionType] !== undefined) sessions[r.sessionType]++; });
+    ['breakfast','lunch','snack','dinner'].forEach(s => {
+      const el = document.getElementById('today' + s.charAt(0).toUpperCase() + s.slice(1));
+      if(el) animateCounter(el, sessions[s]);
+    });
+
+    // Chart
+    renderChart(stats.last7DaysAttendance);
+  } catch(e) { console.error(e); }
+}
+
+function renderChart(data) {
+  const ctx = document.getElementById('attendanceChart').getContext('2d');
+  if (chartInstance) chartInstance.destroy();
+  chartInstance = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: data.map(d => {
+        const date = new Date(d.date);
+        return date.toLocaleDateString('en-IN', { weekday:'short', day:'numeric' });
+      }),
+      datasets: [{
+        label: 'Attendance',
+        data: data.map(d => d.count),
+        backgroundColor: 'rgba(108,99,255,0.6)',
+        borderColor: 'rgba(108,99,255,1)',
+        borderWidth: 2,
+        borderRadius: 8,
+        hoverBackgroundColor: 'rgba(108,99,255,0.85)'
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { beginAtZero: true, ticks: { stepSize: 1, color: '#8892a4' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+        x: { ticks: { color: '#8892a4' }, grid: { display: false } }
+      }
+    }
+  });
+}
+
+// ── PAGES ──
+function showPage(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  event?.target?.closest('.nav-item')?.classList.add('active');
+  const titles = { overview:'Admin Overview', students:'Students', payments:'Payment Verification', attendance:"Today's Attendance", qr:'QR Generator', menu:'Manage Menu' };
+  document.getElementById('topbarTitle').textContent = titles[page];
+  if (page === 'students') loadStudents();
+  if (page === 'payments') loadPendingPayments();
+  if (page === 'attendance') loadAttendance();
+  if (window.innerWidth <= 768) document.getElementById('sidebar').classList.remove('open');
+}
+
+// ── STUDENTS ──
+async function loadStudents() {
+  const students = await apiFetch('/admin/students').catch(() => []);
+  allStudents = students;
+  renderStudents(students);
+}
+
+function renderStudents(students) {
+  const tbody = document.getElementById('studentsTable');
+  tbody.innerHTML = students.length ? students.map((s,i) => `
+    <tr>
+      <td style="color:var(--text3);">${i+1}</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div class="avatar" style="width:32px;height:32px;font-size:12px;">${avatarLetter(s.name)}</div>
+          <strong>${s.name}</strong>
+        </div>
+      </td>
+      <td><code style="background:var(--surface2);padding:3px 8px;border-radius:6px;font-size:12px;">${s.studentId}</code></td>
+      <td>${s.email}</td>
+      <td>${s.phone}</td>
+      <td>${s.subscription ? s.subscription.planType : '<span style="color:var(--text3);">None</span>'}</td>
+      <td>${s.subscription ? s.subscription.remainingDays + ' days' : '—'}</td>
+      <td>${s.subscription ? `<span class="badge badge-${s.subscription.status}">${s.subscription.status}</span>` : '<span class="badge" style="background:var(--surface2);color:var(--text3);">No Plan</span>'}</td>
+    </tr>
+  `).join('') : '<tr><td colspan="8" style="text-align:center;padding:32px;color:var(--text3);">No students registered</td></tr>';
+}
+
+function filterStudents(q) {
+  const filtered = allStudents.filter(s =>
+    s.name.toLowerCase().includes(q.toLowerCase()) ||
+    s.studentId.toLowerCase().includes(q.toLowerCase()) ||
+    s.email.toLowerCase().includes(q.toLowerCase())
+  );
+  renderStudents(filtered);
+}
+
+// ── PAYMENTS ──
+async function loadPendingPayments() {
+  const pending = await apiFetch('/admin/pending-payments').catch(() => []);
+  const el = document.getElementById('pendingPaymentsList');
+  if (!pending.length) {
+    el.innerHTML = `<div class="card" style="text-align:center;padding:48px;color:var(--text3);">
+      <div style="font-size:48px;margin-bottom:12px;">✅</div>
+      <div style="font-size:17px;font-weight:700;">No pending payments</div>
+      <div style="color:var(--text2);margin-top:6px;">All payments have been reviewed</div>
+    </div>`;
+    return;
+  }
+  el.innerHTML = pending.map(p => `
+    <div class="card" style="margin-bottom:16px;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:16px;">
+        <div style="display:flex;gap:16px;align-items:flex-start;">
+          ${p.paymentScreenshot ? `<img src="http://localhost:5000/uploads/${p.paymentScreenshot}" style="width:80px;height:80px;object-fit:cover;border-radius:10px;border:2px solid var(--border);">` : '<div style="width:80px;height:80px;background:var(--surface2);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:24px;">🧾</div>'}
+          <div>
+            <div style="font-weight:700;font-size:16px;">${p.userId?.name || 'Unknown'}</div>
+            <div style="color:var(--text2);font-size:13px;">${p.userId?.email} · ${p.userId?.studentId}</div>
+            <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;">
+              <span class="chip">📅 ${p.planType === '15-day' ? '15 Day' : '30 Day'} Plan</span>
+              <span class="chip">💰 ₹${p.amount?.toLocaleString()}</span>
+              <span class="chip">🕐 ${formatDate(p.createdAt)}</span>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-success btn-sm" onclick="verifyPayment('${p._id}','approve')">✅ Approve</button>
+          <button class="btn btn-danger btn-sm" onclick="verifyPayment('${p._id}','reject')">❌ Reject</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function verifyPayment(subId, action) {
+  try {
+    await apiFetch('/admin/verify-payment', {
+      method: 'POST',
+      body: JSON.stringify({ subscriptionId: subId, action })
+    });
+    toast(`Payment ${action}d successfully!`, action === 'approve' ? 'success' : 'info');
+    loadPendingPayments();
+    loadStats();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+// ── ATTENDANCE ──
+async function loadAttendance() {
+  document.getElementById('attendanceDate').textContent = new Date().toLocaleDateString('en-IN', { weekday:'long', day:'numeric', month:'long' });
+  const records = await apiFetch('/admin/attendance-today').catch(() => []);
+  const tbody = document.getElementById('attendanceTable');
+  tbody.innerHTML = records.length ? records.map((r,i) => `
+    <tr>
+      <td style="color:var(--text3);">${i+1}</td>
+      <td><strong>${r.userId?.name || 'Unknown'}</strong></td>
+      <td><code style="background:var(--surface2);padding:3px 8px;border-radius:6px;font-size:12px;">${r.userId?.studentId || '—'}</code></td>
+      <td><span class="badge badge-approved" style="font-size:11px;">${SESSION_INFO[r.sessionType]?.icon} ${r.sessionType}</span></td>
+      <td>${new Date(r.timestamp).toLocaleTimeString('en-IN', {hour:'2-digit', minute:'2-digit'})}</td>
+    </tr>
+  `).join('') : '<tr><td colspan="5" style="text-align:center;padding:32px;color:var(--text3);">No attendance recorded today</td></tr>';
+}
+
+// ── QR ──
+async function generateQR() {
+  const session = document.getElementById('qrSession').value;
+  const el = document.getElementById('qrDisplay');
+  el.innerHTML = '<div style="color:var(--text2);">Generating…</div>';
+  try {
+    const data = await apiFetch('/qr/generate', {
+      method: 'POST',
+      body: JSON.stringify({ session })
+    });
+    const info = SESSION_INFO[session];
+    el.innerHTML = `
+      <div style="text-align:center;">
+        <div style="font-size:16px;font-weight:700;margin-bottom:4px;">${info.icon} ${info.label}</div>
+        <div style="font-size:12px;color:var(--text3);margin-bottom:16px;">${info.time} · ${data.data.date}</div>
+        <img src="${data.qrImage}" style="border:4px solid white;border-radius:16px;width:220px;box-shadow:0 8px 32px rgba(0,0,0,0.4);">
+        <div style="margin-top:16px;">
+          <a href="${data.qrImage}" download="qr_${session}_${data.data.date}.png" class="btn btn-ghost btn-sm">⬇ Download QR</a>
+        </div>
+      </div>
+    `;
+  } catch(e) { toast(e.message, 'error'); el.innerHTML = '<div style="color:var(--accent2);">Error generating QR</div>'; }
+}
+
+// ── MENU ──
+async function updateMenu() {
+  const date = document.getElementById('menuDate').value;
+  const breakfast = document.getElementById('mBreakfast').value;
+  const lunch = document.getElementById('mLunch').value;
+  const snack = document.getElementById('mSnack').value;
+  const dinner = document.getElementById('mDinner').value;
+
+  if (!date) return toast('Please select a date', 'error');
+  try {
+    await apiFetch('/menu/update', {
+      method: 'POST',
+      body: JSON.stringify({ date, breakfast, lunch, snack, dinner })
+    });
+    toast('Menu updated successfully!', 'success');
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
+
+init();
+</script>
+</body>
+</html>

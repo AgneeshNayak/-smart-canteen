@@ -1,0 +1,30 @@
+﻿{
+  "name": "canteen-app",
+  "version": "1.0.0",
+  "description": "Smart Canteen Subscription Management App",
+  "main": "backend/server.js",
+  "scripts": {
+    "start": "node backend/server.js",
+    "dev": "nodemon backend/server.js",
+    "server": "nodemon backend/server.js"
+  },
+  "keywords": [
+    "canteen",
+    "attendance",
+    "qr",
+    "subscription"
+  ],
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.3",
+    "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.0",
+    "mongoose": "^7.0.3",
+    "multer": "^1.4.5-lts.1",
+    "qrcode": "^1.5.3"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  }
+}

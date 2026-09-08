@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard – Smart Canteen</title>
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-mark">
+        <div class="logo-icon">🍽️</div>
+        <div class="logo-text">Smart<span>Canteen</span></div>
+      </div>
+    </div>
+
+    <span class="nav-label">Main Menu</span>
+    <a class="nav-item active" onclick="showPage('home')">
+      <span class="icon">🏠</span> Dashboard
+    </a>
+    <a class="nav-item" onclick="showPage('menu')">
+      <span class="icon">📋</span> Today's Menu
+    </a>
+    <a class="nav-item" onclick="showPage('attendance')">
+      <span class="icon">📅</span> Attendance
+    </a>
+    <a class="nav-item" onclick="showPage('scan')">
+      <span class="icon">📷</span> Scan QR
+    </a>
+
+    <span class="nav-label" style="margin-top:8px;">Subscription</span>
+    <a class="nav-item" onclick="showPage('subscribe')">
+      <span class="icon">💳</span> Subscribe
+    </a>
+    <a class="nav-item" onclick="showPage('payment')">
+      <span class="icon">🧾</span> Payment
+    </a>
+
+    <div class="sidebar-footer">
+      <div class="user-pill">
+        <div class="avatar" id="sidebarAvatar">?</div>
+        <div class="user-info">
+          <div class="user-name" id="sidebarName">Loading…</div>
+          <div class="user-role">Student</div>
+        </div>
+      </div>
+      <button class="btn btn-ghost btn-sm btn-full" style="margin-top:12px;" onclick="logout()">
+        🚪 Sign Out
+      </button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <button class="btn btn-ghost btn-sm hamburger" onclick="toggleSidebar()">☰</button>
+        <div>
+          <div class="page-title" id="topbarTitle">Dashboard</div>
+          <div style="font-size:12px;color:var(--text3);" id="topbarDate"></div>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <div class="chip" id="sessionChip">No active session</div>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- ── HOME PAGE ── -->
+      <div class="page active" id="page-home">
+
+        <!-- Greeting -->
+        <div style="margin-bottom:28px;">
+          <h2 style="font-size:24px;font-weight:800;" id="greeting">Good morning! 👋</h2>
+          <p style="color:var(--text2);margin-top:4px;" id="greetingSub">Here's your canteen summary for today.</p>
+        </div>
+
+        <!-- Stat Cards -->
+        <div class="grid-4" style="margin-bottom:24px;">
+          <div class="card stat-card">
+            <div class="stat-icon" style="background:rgba(108,99,255,0.15);">💳</div>
+            <div class="stat-value" id="statPlan">—</div>
+            <div class="stat-label">Active Plan</div>
+          </div>
+          <div class="card stat-card">
+            <div class="stat-icon" style="background:rgba(67,233,123,0.15);">✅</div>
+            <div class="stat-value counter" id="statUsed">0</div>
+            <div class="stat-label">Days Used</div>
+          </div>
+          <div class="card stat-card">
+            <div class="stat-icon" style="background:rgba(249,202,36,0.15);">⏳</div>
+            <div class="stat-value counter" id="statRemaining">0</div>
+            <div class="stat-label">Days Remaining</div>
+          </div>
+          <div class="card stat-card">
+            <div class="stat-icon" style="background:rgba(255,107,107,0.15);">📅</div>
+            <div class="stat-value" id="statToday">—</div>
+            <div class="stat-label">Today's Status</div>
+          </div>
+        </div>
+
+        <!-- Subscription Progress -->
+        <div class="card" style="margin-bottom:24px;" id="progressCard">
+          <div class="section-header" style="margin-bottom:16px;">
+            <div>
+              <div class="section-title">Subscription Progress</div>
+              <div class="section-sub" id="progressLabel">Loading…</div>
+            </div>
+            <span class="badge" id="subStatusBadge">—</span>
+          </div>
+          <div class="progress-wrap">
+            <div class="progress-bar" id="progressBar" style="width:0%"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-top:8px;">
+            <span style="font-size:12px;color:var(--text3);">0 days</span>
+            <span style="font-size:12px;color:var(--text3);" id="progressMax">— days</span>
+          </div>
+        </div>
+
+        <!-- Sessions -->
+        <div class="card" style="margin-bottom:24px;">
+          <div class="section-header" style="margin-bottom:16px;">
+            <div class="section-title">Today's Sessions</div>
+            <span style="font-size:12px;color:var(--text3);">Scan QR during active session</span>
+          </div>
+          <div class="session-grid" id="sessionsGrid"></div>
+        </div>
+
+        <!-- Quick Menu Preview -->
+        <div class="card">
+          <div class="section-header" style="margin-bottom:16px;">
+            <div class="section-title">Today's Menu</div>
+            <button class="btn btn-ghost btn-sm" onclick="showPage('menu')">See all →</button>
+          </div>
+          <div class="grid-2" id="quickMenu"></div>
+        </div>
+      </div>
+
+      <!-- ── MENU PAGE ── -->
+      <div class="page" id="page-menu">
+        <div style="margin-bottom:24px;">
+          <h2 style="font-size:22px;font-weight:800;">Today's Menu</h2>
+          <p style="color:var(--text2);margin-top:4px;" id="menuDate">—</p>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:16px;" id="fullMenu"></div>
+      </div>
+
+      <!-- ── ATTENDANCE PAGE ── -->
+      <div class="page" id="page-attendance">
+        <div style="margin-bottom:24px;">
+          <h2 style="font-size:22px;font-weight:800;">Attendance History</h2>
+          <p style="color:var(--text2);margin-top:4px;">Your last 30 days attendance record</p>
+        </div>
+        <div class="card" style="margin-bottom:24px;">
+          <div class="section-title" style="margin-bottom:16px;">Monthly Calendar</div>
+          <div class="att-grid" id="attCalendar"></div>
+        </div>
+        <div class="card">
+          <div class="section-title" style="margin-bottom:16px;">Recent Records</div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>#</th><th>Date</th><th>Session</th><th>Time</th></tr></thead>
+              <tbody id="attTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── SCAN PAGE ── -->
+      <div class="page" id="page-scan">
+        <div style="margin-bottom:24px;">
+          <h2 style="font-size:22px;font-weight:800;">Scan QR Code</h2>
+          <p style="color:var(--text2);margin-top:4px;">Scan the session QR code to mark attendance</p>
+        </div>
+        <div class="grid-2">
+          <div class="card">
+            <div class="section-title" style="margin-bottom:16px;">📷 QR Scanner</div>
+            <div id="reader" style="width:100%;border-radius:12px;overflow:hidden;"></div>
+            <div id="scanResult" style="margin-top:16px;padding:14px;background:var(--surface2);border-radius:var(--radius-sm);display:none;"></div>
+            <button class="btn btn-primary btn-full" style="margin-top:16px;" id="startScanBtn" onclick="startScan()">▶ Start Scanner</button>
+            <button class="btn btn-ghost btn-full" style="margin-top:8px;display:none;" id="stopScanBtn" onclick="stopScan()">⏹ Stop Scanner</button>
+          </div>
+          <div class="card">
+            <div class="section-title" style="margin-bottom:16px;">Current Session QR</div>
+            <div id="currentQR" style="display:flex;flex-direction:column;align-items:center;gap:12px;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── SUBSCRIBE PAGE ── -->
+      <div class="page" id="page-subscribe">
+        <div style="margin-bottom:24px;">
+          <h2 style="font-size:22px;font-weight:800;">Choose a Plan</h2>
+          <p style="color:var(--text2);margin-top:4px;">Select the meal subscription plan that works for you</p>
+        </div>
+        <div id="subActive" class="card" style="display:none;margin-bottom:24px;border-color:rgba(67,233,123,0.3);">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <span style="font-size:32px;">✅</span>
+            <div>
+              <div class="section-title">You have an active subscription</div>
+              <div id="subActiveDetails" style="color:var(--text2);font-size:14px;margin-top:4px;"></div>
+            </div>
+          </div>
+        </div>
+        <div class="grid-2" style="margin-bottom:28px;" id="planGrid">
+          <div class="plan-card" onclick="selectPlan('15-day',this)">
+            <div style="font-size:28px;margin-bottom:12px;">📅</div>
+            <div style="font-size:14px;font-weight:700;color:var(--accent);margin-bottom:4px;">15 DAY PLAN</div>
+            <div class="plan-price">₹1,500 <span>/ 15 days</span></div>
+            <hr class="divider" style="margin:16px 0;">
+            <ul style="list-style:none;display:flex;flex-direction:column;gap:8px;">
+              <li style="font-size:13px;color:var(--text2);">✓ 15 days of meals</li>
+              <li style="font-size:13px;color:var(--text2);">✓ All 4 daily sessions</li>
+              <li style="font-size:13px;color:var(--text2);">✓ QR attendance system</li>
+              <li style="font-size:13px;color:var(--text2);">✓ ₹100/day effective cost</li>
+            </ul>
+          </div>
+          <div class="plan-card popular" onclick="selectPlan('30-day',this)">
+            <div style="font-size:28px;margin-bottom:12px;">📆</div>
+            <div style="font-size:14px;font-weight:700;color:var(--accent);margin-bottom:4px;">30 DAY PLAN</div>
+            <div class="plan-price">₹2,800 <span>/ 30 days</span></div>
+            <hr class="divider" style="margin:16px 0;">
+            <ul style="list-style:none;display:flex;flex-direction:column;gap:8px;">
+              <li style="font-size:13px;color:var(--text2);">✓ 30 days of meals</li>
+              <li style="font-size:13px;color:var(--text2);">✓ All 4 daily sessions</li>
+              <li style="font-size:13px;color:var(--text2);">✓ QR attendance system</li>
+              <li style="font-size:13px;color:var(--accent3);">✓ Save ₹200 vs 15-day x2</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="card" id="subscribeForm" style="display:none;">
+          <div class="section-title" style="margin-bottom:20px;">Upload Payment Screenshot</div>
+          <div class="form-group">
+            <label class="form-label">Selected Plan</label>
+            <input id="selectedPlanInput" class="form-input" readonly>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Payment Screenshot</label>
+            <div class="upload-area" id="uploadArea" onclick="document.getElementById('paymentFile').click()">
+              <div style="font-size:32px;margin-bottom:8px;">📤</div>
+              <div style="font-weight:600;">Click to upload payment screenshot</div>
+              <div style="font-size:12px;color:var(--text3);margin-top:4px;">PNG, JPG, WEBP up to 5MB</div>
+              <img id="uploadPreview" class="upload-preview" style="display:none;">
+            </div>
+            <input type="file" id="paymentFile" accept="image/*" style="display:none;" onchange="previewFile(this)">
+          </div>
+          <button class="btn btn-primary" id="submitSubBtn" onclick="submitSubscription()">Submit Subscription Request</button>
+        </div>
+      </div>
+
+      <!-- ── PAYMENT PAGE ── -->
+      <div class="page" id="page-payment">
+        <div style="margin-bottom:24px;">
+          <h2 style="font-size:22px;font-weight:800;">Payment Status</h2>
+          <p style="color:var(--text2);margin-top:4px;">Track your subscription payment</p>
+        </div>
+        <div class="card" id="paymentStatus">
+          <div style="text-align:center;padding:40px;color:var(--text3);">Loading payment status…</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="../js/app.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+<script>
+// ── INIT ──
+const user = requireAuth('student');
+if (!user) throw new Error('auth');
+
+let currentSub = null;
+let selectedPlan = null;
+let html5QrScanner = null;
+
+function init() {
+  document.getElementById('sidebarName').textContent = user.name;
+  document.getElementById('sidebarAvatar').textContent = avatarLetter(user.name);
+  document.getElementById('greeting').textContent = getGreeting() + ', ' + user.name.split(' ')[0] + '! 👋';
+  document.getElementById('topbarDate').textContent = new Date().toLocaleDateString('en-IN', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+
+  const session = getCurrentSession();
+  const sessionChip = document.getElementById('sessionChip');
+  if (session) {
+    sessionChip.textContent = SESSION_INFO[session].icon + ' ' + SESSION_INFO[session].label + ' active';
+    sessionChip.style.background = 'rgba(108,99,255,0.15)';
+    sessionChip.style.color = 'var(--accent)';
+    sessionChip.style.borderColor = 'rgba(108,99,255,0.3)';
+  }
+
+  loadDashboard();
+}
+
+function getGreeting() {
+  const h = new Date().getHours();
+  if (h < 12) return 'Good morning';
+  if (h < 17) return 'Good afternoon';
+  return 'Good evening';
+}
+
+async function loadDashboard() {
+  try {
+    const [subData, todayAtt, menuData] = await Promise.all([
+      apiFetch('/subscription/my').catch(() => null),
+      apiFetch('/attendance/today').catch(() => ({ attended: false })),
+      apiFetch('/menu/today').catch(() => null)
+    ]);
+
+    currentSub = subData;
+
+    // Stat cards
+    if (subData) {
+      document.getElementById('statPlan').textContent = subData.planType === '15-day' ? '15 Day' : '30 Day';
+      animateCounter(document.getElementById('statUsed'), subData.usedDays);
+      animateCounter(document.getElementById('statRemaining'), subData.remainingDays);
+
+      // Progress
+      const pct = (subData.usedDays / subData.totalDays) * 100;
+      setTimeout(() => document.getElementById('progressBar').style.width = pct + '%', 100);
+      document.getElementById('progressLabel').textContent = `${subData.usedDays} of ${subData.totalDays} days used`;
+      document.getElementById('progressMax').textContent = subData.totalDays + ' days';
+      const badge = document.getElementById('subStatusBadge');
+      badge.textContent = subData.status.charAt(0).toUpperCase() + subData.status.slice(1);
+      badge.className = 'badge badge-' + subData.status;
+    } else {
+      document.getElementById('statPlan').textContent = 'None';
+      document.getElementById('progressLabel').textContent = 'No active subscription';
+    }
+
+    document.getElementById('statToday').textContent = todayAtt.attended ? '✅ Attended' : '—';
+    document.getElementById('greetingSub').textContent = todayAtt.attended
+      ? `You've already checked in today. Enjoy your meal! 🍽️`
+      : `You haven't checked in today. Don't forget to scan! 📷`;
+
+    // Sessions
+    renderSessions(todayAtt);
+
+    // Quick menu
+    if (menuData) renderQuickMenu(menuData);
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+function renderSessions(todayAtt) {
+  const sessions = ['breakfast','lunch','snack','dinner'];
+  const current = getCurrentSession();
+  const grid = document.getElementById('sessionsGrid');
+  grid.innerHTML = sessions.map(s => {
+    const info = SESSION_INFO[s];
+    const isActive = s === current;
+    const isAttended = todayAtt.attended && todayAtt.record?.sessionType === s;
+    return `<div class="session-card ${isActive ? 'active-session' : ''}">
+      <div style="font-size:28px;">${info.icon}</div>
+      <div style="flex:1;">
+        <div style="font-weight:600;font-size:14px;">${info.label}</div>
+        <div class="session-time">${info.time}</div>
+        ${isActive ? '<div style="margin-top:6px;"><span class="badge badge-approved" style="font-size:11px;">🟢 Active Now</span></div>' : ''}
+        ${isAttended ? '<div style="margin-top:6px;"><span class="badge badge-approved" style="font-size:11px;">✅ Attended</span></div>' : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderQuickMenu(menu) {
+  const items = [
+    { key:'breakfast', icon:'🌅', label:'Breakfast', time:'7:30–9:00 AM' },
+    { key:'lunch', icon:'☀️', label:'Lunch', time:'12:00–2:00 PM' }
+  ];
+  document.getElementById('quickMenu').innerHTML = items.map(i => `
+    <div class="menu-item">
+      <div class="menu-icon">${i.icon}</div>
+      <div>
+        <div class="menu-name">${i.label} · ${i.time}</div>
+        <div class="menu-items">${menu[i.key] || 'Menu not set'}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ── PAGES ──
+let activePage = 'home';
+function showPage(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  event?.target?.closest('.nav-item')?.classList.add('active');
+
+  const titles = { home:'Dashboard', menu:"Today's Menu", attendance:'Attendance', scan:'Scan QR', subscribe:'Subscribe', payment:'Payment Status' };
+  document.getElementById('topbarTitle').textContent = titles[page] || page;
+
+  if (page === 'menu') loadMenu();
+  if (page === 'attendance') loadAttendance();
+  if (page === 'subscribe') loadSubscribePage();
+  if (page === 'payment') loadPaymentStatus();
+  if (page === 'scan') loadCurrentQR();
+  if (page !== 'scan' && html5QrScanner) stopScan();
+
+  // Close sidebar on mobile
+  if (window.innerWidth <= 768) document.getElementById('sidebar').classList.remove('open');
+  activePage = page;
+}
+
+// ── MENU ──
+async function loadMenu() {
+  const menu = await apiFetch('/menu/today').catch(() => null);
+  if (!menu) return;
+  document.getElementById('menuDate').textContent = new Date().toLocaleDateString('en-IN', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+  const items = [
+    { key:'breakfast', icon:'🌅', label:'Morning Breakfast', time:'7:30 AM – 9:00 AM', color:'rgba(108,99,255,0.1)' },
+    { key:'lunch', icon:'☀️', label:'Afternoon Lunch', time:'12:00 PM – 2:00 PM', color:'rgba(249,202,36,0.1)' },
+    { key:'snack', icon:'🍵', label:'Evening Snack', time:'3:00 PM – 5:00 PM', color:'rgba(67,233,123,0.1)' },
+    { key:'dinner', icon:'🌙', label:'Night Dinner', time:'7:30 PM – 9:15 PM', color:'rgba(255,107,107,0.1)' }
+  ];
+  document.getElementById('fullMenu').innerHTML = items.map(i => `
+    <div class="menu-item" style="background:${i.color};border:1px solid var(--border);">
+      <div class="menu-icon">${i.icon}</div>
+      <div style="flex:1;">
+        <div class="menu-name">${i.label}</div>
+        <div style="font-size:11px;color:var(--text3);margin-bottom:6px;">${i.time}</div>
+        <div class="menu-items">${menu[i.key] || 'Menu not set for today'}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ── ATTENDANCE ──
+async function loadAttendance() {
+  const records = await apiFetch('/attendance/history').catch(() => []);
+  const tbody = document.getElementById('attTable');
+  tbody.innerHTML = records.length ? records.map((r,i) => `
+    <tr>
+      <td style="color:var(--text3);">${i+1}</td>
+      <td><strong>${formatDate(r.date)}</strong></td>
+      <td><span class="badge badge-approved" style="font-size:11px;">${SESSION_INFO[r.sessionType]?.icon} ${r.sessionType}</span></td>
+      <td>${new Date(r.timestamp).toLocaleTimeString('en-IN', {hour:'2-digit',minute:'2-digit'})}</td>
+    </tr>
+  `).join('') : '<tr><td colspan="4" style="text-align:center;padding:32px;color:var(--text3);">No attendance records yet</td></tr>';
+
+  // Calendar (current month)
+  const cal = document.getElementById('attCalendar');
+  const attendedDates = new Set(records.map(r => r.date));
+  const now = new Date();
+  const year = now.getFullYear(), month = now.getMonth();
+  const days = ['Su','Mo','Tu','We','Th','Fr','Sa'];
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month+1, 0).getDate();
+  const todayStr = now.toISOString().split('T')[0];
+
+  let html = days.map(d => `<div class="att-day hdr">${d}</div>`).join('');
+  for (let i = 0; i < firstDay; i++) html += '<div class="att-day"></div>';
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const isAttended = attendedDates.has(dateStr);
+    const isToday = dateStr === todayStr;
+    html += `<div class="att-day ${isAttended?'attended':''} ${isToday?'today':''}" title="${dateStr}">${d}</div>`;
+  }
+  cal.innerHTML = html;
+}
+
+// ── SUBSCRIBE ──
+async function loadSubscribePage() {
+  const sub = await apiFetch('/subscription/my').catch(() => null);
+  const activeDiv = document.getElementById('subActive');
+  if (sub && (sub.status === 'pending' || sub.status === 'approved')) {
+    activeDiv.style.display = 'block';
+    document.getElementById('subActiveDetails').textContent =
+      `${sub.planType} · ${sub.remainingDays} days remaining · Status: ${sub.status}`;
+  } else {
+    activeDiv.style.display = 'none';
+  }
+}
+
+function selectPlan(plan, el) {
+  document.querySelectorAll('.plan-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedPlan = plan;
+  document.getElementById('subscribeForm').style.display = 'block';
+  document.getElementById('selectedPlanInput').value = plan === '15-day' ? '15 Day Plan – ₹1,500' : '30 Day Plan – ₹2,800';
+  document.getElementById('subscribeForm').scrollIntoView({ behavior:'smooth' });
+}
+
+function previewFile(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const preview = document.getElementById('uploadPreview');
+    preview.src = e.target.result;
+    preview.style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+}
+
+async function submitSubscription() {
+  if (!selectedPlan) return toast('Please select a plan', 'error');
+  const file = document.getElementById('paymentFile').files[0];
+  if (!file) return toast('Please upload payment screenshot', 'error');
+
+  const btn = document.getElementById('submitSubBtn');
+  btn.disabled = true; btn.textContent = 'Submitting…';
+
+  const formData = new FormData();
+  formData.append('planType', selectedPlan);
+  formData.append('paymentScreenshot', file);
+
+  try {
+    const d = await apiFetch('/subscription/subscribe', {
+      method: 'POST',
+      body: formData
+    });
+    if (d.message && !d.subscription) throw new Error(d.message);
+    toast('Subscription submitted! Awaiting admin approval.', 'success');
+    showPage('payment');
+  } catch (err) {
+    toast(err.message, 'error');
+  }
+  btn.disabled = false; btn.textContent = 'Submit Subscription Request';
+}
+
+// ── PAYMENT STATUS ──
+async function loadPaymentStatus() {
+  const sub = await apiFetch('/subscription/my').catch(() => null);
+  const el = document.getElementById('paymentStatus');
+  if (!sub) {
+    el.innerHTML = `<div style="text-align:center;padding:40px;">
+      <div style="font-size:48px;margin-bottom:12px;">💳</div>
+      <div style="font-size:17px;font-weight:700;">No subscription found</div>
+      <div style="color:var(--text2);margin-top:6px;margin-bottom:20px;">Subscribe to a plan to get started</div>
+      <button class="btn btn-primary" onclick="showPage('subscribe')">Browse Plans</button>
+    </div>`;
+    return;
+  }
+  const statusColors = { pending: 'var(--accent4)', approved: 'var(--accent3)', expired: 'var(--accent2)' };
+  el.innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:20px;">
+      <div style="display:flex;align-items:center;gap:16px;">
+        <div style="font-size:48px;">${sub.status === 'approved' ? '✅' : sub.status === 'pending' ? '⏳' : '❌'}</div>
+        <div>
+          <div style="font-size:20px;font-weight:800;">${sub.planType === '15-day' ? '15 Day Plan' : '30 Day Plan'}</div>
+          <span class="badge badge-${sub.status}" style="margin-top:4px;">${sub.status.toUpperCase()}</span>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div style="padding:16px;background:var(--surface2);border-radius:var(--radius-sm);">
+          <div style="font-size:12px;color:var(--text3);">Amount</div>
+          <div style="font-size:18px;font-weight:700;margin-top:4px;">₹${sub.amount?.toLocaleString()}</div>
+        </div>
+        <div style="padding:16px;background:var(--surface2);border-radius:var(--radius-sm);">
+          <div style="font-size:12px;color:var(--text3);">Remaining Days</div>
+          <div style="font-size:18px;font-weight:700;margin-top:4px;">${sub.remainingDays} / ${sub.totalDays}</div>
+        </div>
+      </div>
+      ${sub.status === 'pending' ? '<div style="padding:16px;background:rgba(249,202,36,0.08);border:1px solid rgba(249,202,36,0.2);border-radius:var(--radius-sm);color:var(--accent4);font-size:13px;">⏳ Your payment is under review. Admin will verify within 24 hours.</div>' : ''}
+      ${sub.startDate ? `<div style="font-size:13px;color:var(--text2);">Started: ${formatDate(sub.startDate)} · Ends: ${formatDate(sub.endDate)}</div>` : ''}
+      ${sub.paymentScreenshot ? `<div><div style="font-size:13px;color:var(--text2);margin-bottom:8px;">Payment Screenshot:</div><img src="http://localhost:5000/uploads/${sub.paymentScreenshot}" style="max-width:250px;border-radius:12px;border:2px solid var(--border);" alt="Payment"></div>` : ''}
+    </div>
+  `;
+}
+
+// ── QR SCAN ──
+async function loadCurrentQR() {
+  const session = getCurrentSession();
+  const el = document.getElementById('currentQR');
+  if (!session) {
+    el.innerHTML = `<div style="text-align:center;padding:24px;color:var(--text3);">
+      <div style="font-size:40px;margin-bottom:8px;">🕐</div>
+      <div style="font-weight:600;">No active session right now</div>
+      <div style="font-size:13px;margin-top:4px;">Sessions: 7:30AM, 12PM, 3PM, 7:30PM</div>
+    </div>`;
+    return;
+  }
+  try {
+    const data = await apiFetch('/qr/session/' + session);
+    el.innerHTML = `
+      <div style="text-align:center;">
+        <div style="font-size:13px;color:var(--text2);margin-bottom:8px;">${SESSION_INFO[session].icon} ${SESSION_INFO[session].label}</div>
+        <img src="${data.qrImage}" style="border:4px solid white;border-radius:12px;width:200px;">
+        <div style="font-size:12px;color:var(--text3);margin-top:8px;">${data.date}</div>
+        <button class="btn btn-primary btn-sm" style="margin-top:12px;" onclick="markAttendanceManual('${session}','${data.date}')">✅ Mark Attendance</button>
+      </div>
+    `;
+  } catch (e) {
+    el.innerHTML = `<div style="color:var(--text3);">Error loading QR</div>`;
+  }
+}
+
+async function markAttendanceManual(session, date) {
+  try {
+    const res = await apiFetch('/attendance/scan', {
+      method: 'POST',
+      body: JSON.stringify({ session, date })
+    });
+    toast(res.message, res.alreadyRecorded ? 'info' : 'success');
+    loadDashboard();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+// ── QR SCANNER ──
+async function startScan() {
+  document.getElementById('startScanBtn').style.display = 'none';
+  document.getElementById('stopScanBtn').style.display = 'flex';
+  html5QrScanner = new Html5Qrcode('reader');
+  try {
+    await html5QrScanner.start(
+      { facingMode: 'environment' },
+      { fps: 10, qrbox: { width: 250, height: 250 } },
+      async (decodedText) => {
+        stopScan();
+        try {
+          const qrData = JSON.parse(decodedText);
+          const res = await apiFetch('/attendance/scan', {
+            method: 'POST',
+            body: JSON.stringify({ session: qrData.session, date: qrData.date })
+          });
+          const el = document.getElementById('scanResult');
+          el.style.display = 'block';
+          el.innerHTML = `<div style="color:${res.alreadyRecorded?'var(--accent4)':'var(--accent3)'};font-weight:600;">${res.message}</div>`;
+          toast(res.message, res.alreadyRecorded ? 'info' : 'success');
+          loadDashboard();
+        } catch(e) { toast(e.message, 'error'); }
+      },
+      () => {}
+    );
+  } catch(e) {
+    toast('Camera access denied. Please allow camera permission.', 'error');
+    document.getElementById('startScanBtn').style.display = 'flex';
+    document.getElementById('stopScanBtn').style.display = 'none';
+  }
+}
+
+function stopScan() {
+  if (html5QrScanner) { html5QrScanner.stop().catch(()=>{}); html5QrScanner = null; }
+  document.getElementById('startScanBtn').style.display = 'flex';
+  document.getElementById('stopScanBtn').style.display = 'none';
+}
+
+function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
+
+init();
+</script>
+</body>
+</html>

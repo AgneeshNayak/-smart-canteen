@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login – Smart Canteen</title>
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+<div class="auth-page">
+  <div class="auth-bg"></div>
+  <div class="auth-card">
+    <div class="auth-header">
+      <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:16px;">
+        <div class="logo-icon">🍽️</div>
+        <span style="font-family:Syne,sans-serif;font-size:20px;font-weight:800;">Smart<span style="color:var(--accent);">Canteen</span></span>
+      </div>
+      <h1 class="auth-title">Welcome back</h1>
+      <p class="auth-sub">Sign in to your account to continue</p>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Email Address</label>
+      <input id="email" type="email" class="form-input" placeholder="you@example.com">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Password</label>
+      <input id="password" type="password" class="form-input" placeholder="••••••••">
+    </div>
+
+    <button class="btn btn-primary btn-full" id="loginBtn" onclick="handleLogin()">
+      <span id="loginText">Sign In</span>
+    </button>
+
+    <hr class="divider">
+    <p style="text-align:center;font-size:14px;color:var(--text2);">
+      Don't have an account? <a href="register.html" style="color:var(--accent);font-weight:600;">Register</a>
+    </p>
+
+    <div style="margin-top:16px;padding:12px;background:var(--surface2);border-radius:var(--radius-sm);font-size:12px;color:var(--text3);">
+      <strong style="color:var(--text2);">Demo Admin:</strong> admin@canteen.com / admin123
+    </div>
+  </div>
+</div>
+
+<script src="../js/app.js"></script>
+<script>
+// Redirect if already logged in
+const u = getUser();
+if (u) window.location.href = u.role === 'admin' ? 'admin.html' : 'dashboard.html';
+
+async function handleLogin() {
+  const email = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value;
+  const btn = document.getElementById('loginBtn');
+  const txt = document.getElementById('loginText');
+
+  if (!email || !password) return toast('Please fill in all fields', 'error');
+
+  btn.disabled = true;
+  txt.textContent = 'Signing in…';
+  try {
+    const data = await apiFetch('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ email, password })
+    });
+    setAuth(data.token, data.user);
+    toast('Welcome back, ' + data.user.name + '!', 'success');
+    setTimeout(() => {
+      window.location.href = data.user.role === 'admin' ? 'admin.html' : 'dashboard.html';
+    }, 800);
+  } catch (err) {
+    toast(err.message, 'error');
+    btn.disabled = false;
+    txt.textContent = 'Sign In';
+  }
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Enter') handleLogin(); });
+</script>
+</body>
+</html>
