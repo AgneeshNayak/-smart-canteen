@@ -560,35 +560,62 @@ async function loadPaymentStatus() {
       </div>
       ${sub.status === 'pending' ? '<div style="padding:16px;background:rgba(249,202,36,0.08);border:1px solid rgba(249,202,36,0.2);border-radius:var(--radius-sm);color:var(--accent4);font-size:13px;">⏳ Your payment is under review. Admin will verify within 24 hours.</div>' : ''}
       ${sub.startDate ? `<div style="font-size:13px;color:var(--text2);">Started: ${formatDate(sub.startDate)} · Ends: ${formatDate(sub.endDate)}</div>` : ''}
-      ${sub.paymentScreenshot ? `<div><div style="font-size:13px;color:var(--text2);margin-bottom:8px;">Payment Screenshot:</div><img src="http://localhost:5000/uploads/${sub.paymentScreenshot}" style="max-width:250px;border-radius:12px;border:2px solid var(--border);" alt="Payment"></div>` : ''}
+      ${sub.paymentScreenshot ? `<div><div style="font-size:13px;color:var(--text2);margin-bottom:8px;">Payment Screenshot:</div><img src="${typeof UPLOADS_URL !== 'undefined' ? UPLOADS_URL : '/uploads'}/${sub.paymentScreenshot}" style="max-width:250px;border-radius:12px;border:2px solid var(--border);" alt="Payment"></div>` : ''}
     </div>
   `;
 }
 
 // ── QR SCAN ──
-async function loadCurrentQR() {
-  const session = getCurrentSession();
+let selectedScanSession = null;
+
+async function loadCurrentQR(sessionOverride = null) {
+  const current = getCurrentSession();
+  const session = sessionOverride || selectedScanSession || current || 'lunch';
+  selectedScanSession = session;
   const el = document.getElementById('currentQR');
-  if (!session) {
-    el.innerHTML = `<div style="text-align:center;padding:24px;color:var(--text3);">
-      <div style="font-size:40px;margin-bottom:8px;">🕐</div>
-      <div style="font-weight:600;">No active session right now</div>
-      <div style="font-size:13px;margin-top:4px;">Sessions: 7:30AM, 12PM, 3PM, 7:30PM</div>
-    </div>`;
-    return;
-  }
+  el.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text3);"><div style="font-size:32px;margin-bottom:8px;">⏳</div><div>Loading QR code…</div></div>';
+
   try {
     const data = await apiFetch('/qr/session/' + session);
+    const info = SESSION_INFO[session] || { icon: '🍽️', label: session, time: '' };
+    const isActive = session === current;
+
     el.innerHTML = `
-      <div style="text-align:center;">
-        <div style="font-size:13px;color:var(--text2);margin-bottom:8px;">${SESSION_INFO[session].icon} ${SESSION_INFO[session].label}</div>
-        <img src="${data.qrImage}" style="border:4px solid white;border-radius:12px;width:200px;">
-        <div style="font-size:12px;color:var(--text3);margin-top:8px;">${data.date}</div>
-        <button class="btn btn-primary btn-sm" style="margin-top:12px;" onclick="markAttendanceManual('${session}','${data.date}')">✅ Mark Attendance</button>
+      <div style="text-align:center;width:100%;">
+        <!-- Session Switcher Buttons -->
+        <div style="display:flex;justify-content:center;gap:6px;margin-bottom:14px;flex-wrap:wrap;">
+          ${['breakfast', 'lunch', 'snack', 'dinner'].map(s => `
+            <button class="btn btn-sm ${s === session ? 'btn-primary' : 'btn-ghost'}" style="font-size:11px;padding:4px 9px;" onclick="loadCurrentQR('${s}')">
+              ${SESSION_INFO[s].icon} ${s.charAt(0).toUpperCase() + s.slice(1)} ${s === current ? '🟢' : ''}
+            </button>
+          `).join('')}
+        </div>
+
+        <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:2px;">
+          ${info.icon} ${info.label} ${isActive ? '<span class="badge badge-approved" style="font-size:10px;margin-left:4px;">🟢 Active Now</span>' : ''}
+        </div>
+        <div style="font-size:12px;color:var(--text3);margin-bottom:12px;">${info.time} · ${data.date}</div>
+
+        <div style="display:inline-block;padding:8px;background:#ffffff;border-radius:14px;box-shadow:0 8px 24px rgba(0,0,0,0.35);">
+          <img src="${data.qrImage}" style="display:block;width:190px;height:190px;border-radius:8px;" alt="Session QR">
+        </div>
+
+        <div style="margin-top:14px;">
+          <button class="btn btn-primary btn-sm btn-full" onclick="markAttendanceManual('${session}','${data.date}')">
+            ✅ Mark Attendance for ${session.charAt(0).toUpperCase() + session.slice(1)}
+          </button>
+        </div>
       </div>
     `;
   } catch (e) {
-    el.innerHTML = `<div style="color:var(--text3);">Error loading QR</div>`;
+    el.innerHTML = `
+      <div style="text-align:center;padding:24px;color:var(--text3);">
+        <div style="font-size:32px;margin-bottom:8px;">⚠️</div>
+        <div style="font-weight:600;">Failed to load QR code</div>
+        <div style="font-size:12px;color:var(--text3);margin-top:4px;">${e.message}</div>
+        <button class="btn btn-ghost btn-sm" style="margin-top:12px;" onclick="loadCurrentQR()">🔄 Try Again</button>
+      </div>
+    `;
   }
 }
 

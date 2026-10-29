@@ -187,7 +187,7 @@
             <div class="section-title" style="margin-bottom:20px;">Generate Session QR</div>
             <div class="form-group">
               <label class="form-label">Select Session</label>
-              <select id="qrSession" class="form-input">
+              <select id="qrSession" class="form-input" onchange="generateQR()">
                 <option value="breakfast">🌅 Morning Breakfast (7:30–9:00 AM)</option>
                 <option value="lunch">☀️ Afternoon Lunch (12:00–2:00 PM)</option>
                 <option value="snack">🍵 Evening Snack (3:00–5:00 PM)</option>
@@ -327,6 +327,7 @@ function showPage(page) {
   if (page === 'students') loadStudents();
   if (page === 'payments') loadPendingPayments();
   if (page === 'attendance') loadAttendance();
+  if (page === 'qr') generateQR();
   if (window.innerWidth <= 768) document.getElementById('sidebar').classList.remove('open');
 }
 
@@ -383,7 +384,7 @@ async function loadPendingPayments() {
     <div class="card" style="margin-bottom:16px;">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:16px;">
         <div style="display:flex;gap:16px;align-items:flex-start;">
-          ${p.paymentScreenshot ? `<img src="http://localhost:5000/uploads/${p.paymentScreenshot}" style="width:80px;height:80px;object-fit:cover;border-radius:10px;border:2px solid var(--border);">` : '<div style="width:80px;height:80px;background:var(--surface2);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:24px;">🧾</div>'}
+          ${p.paymentScreenshot ? `<img src="${typeof UPLOADS_URL !== 'undefined' ? UPLOADS_URL : '/uploads'}/${p.paymentScreenshot}" style="width:80px;height:80px;object-fit:cover;border-radius:10px;border:2px solid var(--border);">` : '<div style="width:80px;height:80px;background:var(--surface2);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:24px;">🧾</div>'}
           <div>
             <div style="font-weight:700;font-size:16px;">${p.userId?.name || 'Unknown'}</div>
             <div style="color:var(--text2);font-size:13px;">${p.userId?.email} · ${p.userId?.studentId}</div>
