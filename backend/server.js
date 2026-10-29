@@ -56,5 +56,26 @@ app.use((err, req, res, next) => {
   res.status(500).json({ message: err.message || 'Internal Server Error' });
 });
 
-const PORT = Math.max(parseInt(process.env.PORT) || 5000, 5000);
-app.listen(PORT, () => console.log(`🚀 Server running on http://localhost:${PORT}`));
+const PORT = parseInt(process.env.PORT, 10) || 5000;
+const server = app.listen(PORT, () => {
+  console.log(`🚀 Server running on http://localhost:${PORT}`);
+});
+
+server.on('error', (err) => {
+  if (err.code === 'EADDRINUSE') {
+    console.error(`❌ Port ${PORT} is already in use. Please kill the existing process or set a different PORT in .env`);
+  } else {
+    console.error('❌ Server error:', err);
+  }
+  process.exit(1);
+});
+
+process.on('SIGINT', () => {
+  server.close(() => {
+    mongoose.connection.close(false).then(() => {
+      console.log('\n🛑 Server and database connection closed.');
+      process.exit(0);
+    });
+  });
+});
+
