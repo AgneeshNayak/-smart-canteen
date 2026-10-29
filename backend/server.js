@@ -12,6 +12,16 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
+// Database Connection Status Check
+app.use((req, res, next) => {
+  if (req.path.startsWith('/api') && mongoose.connection.readyState !== 1) {
+    return res.status(503).json({
+      message: 'Database is not connected yet. Please verify your MongoDB password and Network Access (0.0.0.0/0) in Render environment variables.'
+    });
+  }
+  next();
+});
+
 // Routes
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/subscription', require('./routes/subscription'));
