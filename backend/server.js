@@ -12,11 +12,30 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
+let lastMongoError = null;
+
+// Diagnostics Endpoint
+app.get('/api/db-status', (req, res) => {
+  const states = ['disconnected', 'connected', 'connecting', 'disconnecting'];
+  res.json({
+    status: mongoose.connection.readyState === 1 ? 'connected' : 'error',
+    readyState: mongoose.connection.readyState,
+    stateText: states[mongoose.connection.readyState] || 'unknown',
+    hasMongoUri: Boolean(process.env.MONGO_URI),
+    mongoUriMasked: process.env.MONGO_URI
+      ? process.env.MONGO_URI.replace(/:([^:@]+)@/, ':****@')
+      : 'NONE',
+    lastError: lastMongoError ? (lastMongoError.message || String(lastMongoError)) : 'No error recorded yet'
+  });
+});
+
 // Database Connection Status Check
 app.use((req, res, next) => {
+  if (req.path === '/api/db-status') return next();
   if (req.path.startsWith('/api') && mongoose.connection.readyState !== 1) {
     return res.status(503).json({
-      message: 'Database is not connected yet. Please verify your MongoDB password and Network Access (0.0.0.0/0) in Render environment variables.'
+      message: 'Database is not connected yet.',
+      details: lastMongoError ? lastMongoError.message : 'Connecting or disconnected. Check Render logs.'
     });
   }
   next();
@@ -40,6 +59,7 @@ app.get('/', (req, res) => {
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/canteen_db';
 mongoose.connect(MONGO_URI)
   .then(() => {
+    lastMongoError = null;
     console.log('✅ MongoDB Connected');
     // Seed admin user
     const User = require('./models/User');
@@ -58,7 +78,10 @@ mongoose.connect(MONGO_URI)
       }
     });
   })
-  .catch(err => console.error('❌ MongoDB Error:', err));
+  .catch(err => {
+    lastMongoError = err;
+    console.error('❌ MongoDB Error:', err.message);
+  });
 
 // Global JSON Error Handler
 app.use((err, req, res, next) => {
